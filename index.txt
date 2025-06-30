@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Chosen Palette: Desert Calm -->
+    <!-- Application Structure Plan: A tab-based, single-page application (SPA) design. The structure avoids a long, linear scroll by organizing content into logical, thematic tabs: Introduction, Articulation Points (Makharij), Letter Characteristics (Sifaat), Noon Saakinah Rules, Meem Saakinah Rules, Madd Rules, Other Rules, AI-Powered Verse Analysis, AI-Powered Rule Inquiries, AI-Powered Terminology Explanation, AI-Powered Tajweed Quiz, AI-Powered Common Mistakes & Tips, and a new AI-Powered Practice Sentences section. This modular approach allows users to directly navigate to any topic of interest, facilitating focused learning. Interactions include clickable diagrams for Makharij, expandable accordions for Sifaat, dynamic charts for rule distributions, and augmented AI-powered example generation, verse analysis, rule clarifications, terminology explanations, interactive quizzes, common mistakes with tips, and now practice sentence generation. This structure was chosen for its superior usability and information organization compared to a simple linear document, transforming the dense report into an engaging and explorable educational tool. -->
+    <!-- Visualization & Content Choices: 
+        - Report Info: Distribution of Arabic letters across the 4 rules of Noon Saakinah. -> Goal: Compare proportions. -> Viz/Presentation: Doughnut Chart. -> Interaction: Hover tooltips show count/percentage. -> Justification: A doughnut chart provides an immediate, intuitive visual comparison of how the alphabet is categorized, which is more impactful than a simple list. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Comparison of letters having a Sifah vs. its opposite (e.g., Hems vs. Jahr). -> Goal: Direct comparison of two groups. -> Viz/Presentation: Bar Chart. -> Interaction: Hover tooltips show exact letter counts. -> Justification: A bar chart is ideal for directly comparing the counts of two opposing categories side-by-side. -> Library/Method: Chart.js (Canvas).
+        - Report Info: Articulation points (Makharij). -> Goal: Spatially organize letter origins. -> Viz/Presentation: Interactive diagram built with HTML/CSS. -> Interaction: Clicking on a region (e.g., Al-Halq) reveals its sub-points and associated letters. -> Justification: An interactive diagram is more engaging and intuitive for learning spatial information than a static table or list. -> Library/Method: HTML/Tailwind CSS + JS for interactivity.
+        - Report Info: Madd durations (2, 4, 5, 6 counts). -> Goal: Visually represent and compare different lengths. -> Viz/Presentation: Horizontal Bar Chart. -> Interaction: Tooltips clarify the Madd type associated with each duration. -> Justification: A horizontal bar chart makes the abstract concept of "counts" tangible and easy to compare visually. -> Library/Method: Chart.js (Canvas).
+        - AI-Powered Feature: Generate additional examples for Tajweed rules. -> Goal: Enhance learning with diverse examples. -> Viz/Presentation: Text output in a dedicated area. -> Interaction: Button click to trigger LLM call. -> Justification: LLM can provide dynamic, context-specific examples, making the learning more comprehensive. -> Library/Method: Gemini API (gemini-2.0-flash).
+        - AI-Powered Feature: Analyze Quranic verse for Tajweed rules. -> Goal: Provide practical application and rule identification. -> Viz/Presentation: Text output in a dedicated area. -> Interaction: Text input and button click to trigger LLM call. -> Justification: LLM can perform complex text analysis to identify and explain rules within a given verse, aiding practical understanding. -> Library/Method: Gemini API (gemini-2.0-flash).
+        - AI-Powered Feature: Rule Clarification/Q&A. -> Goal: Provide on-demand, detailed explanations for specific rules. -> Viz/Presentation: Text output in a dedicated area. -> Interaction: Text input and button click to trigger LLM call. -> Justification: LLM can act as a knowledgeable tutor, clarifying complex rules based on user queries, offering personalized learning support. -> Library/Method: Gemini API (gemini-2.0-flash).
+        - AI-Powered Feature: Tajweed Terminology Explanation. -> Goal: Clarify specific Tajweed terms for users. -> Viz/Presentation: Text output in a dedicated area. -> Interaction: Text input and button click to trigger LLM call. -> Justification: LLM can provide clear, concise, and bilingual explanations for a wide range of Tajweed terms, improving user comprehension. -> Library/Method: Gemini API (gemini-2.0-flash).
+        - AI-Powered Feature: Tajweed Quiz Generation. -> Goal: Enable self-assessment and reinforce learning. -> Viz/Presentation: Multiple-choice questions and answers. -> Interaction: Dropdown selection for topic, button to generate quiz, button to reveal answers. -> Justification: LLM can dynamically generate varied quiz questions based on selected topics, offering a personalized and interactive self-test. -> Library/Method: Gemini API (gemini-2.0-flash).
+        - AI-Powered Feature: Common Mistakes & Tips. -> Goal: Highlight frequent errors and provide corrective advice. -> Viz/Presentation: List of mistakes and tips. -> Interaction: Dropdown selection for topic, button to generate content. -> Justification: LLM can offer practical insights into common pitfalls and how to avoid them, enhancing practical application. -> Library/Method: Gemini API (gemini-2.0-flash).
+        - AI-Powered Feature: Practice Sentence Generation. -> Goal: Provide targeted practice sentences for specific Tajweed rules. -> Viz/Presentation: List of Arabic sentences/phrases. -> Interaction: Dropdown selection for rule/topic, button to generate sentences. -> Justification: LLM can generate dynamic and relevant practice material for direct application of learned rules. -> Library/Method: Gemini API (gemini-2.0-flash).
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <title>دليل التجويد التفاعلي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;700&family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Arabic', 'Inter', sans-serif;
+            background-color: #FDFBF5;
+            color: #4A4A4A;
+        }
+        .tajweed-card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAEAEA;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            transition: all 0.3s ease-in-out;
+        }
+        .nav-button {
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            font-weight: 700;
+            border: 2px solid transparent;
+        }
+        .nav-button.active {
+            background-color: #A0937D;
+            color: #FFFFFF;
+        }
+        .nav-button:not(.active) {
+            color: #A0937D;
+        }
+        .nav-button:not(.active):hover {
+            background-color: #EFEBE4;
+        }
+        .rtl-letter {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #8B7E66;
+            padding: 0 0.25rem;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 450px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 350px;
+        }
+         @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+             }
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-in-out;
+        }
+        .gemini-button {
+            background-color: #4CAF50; /* A pleasant green */
+            color: white;
+            padding: 0.75rem 1.25rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.3s ease;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+        .gemini-button:hover {
+            background-color: #45a049;
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #fff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .quiz-option {
+            background-color: #f0f0f0;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .quiz-option:hover {
+            background-color: #e0e0e0;
+        }
+        .quiz-option.correct {
+            background-color: #d4edda; /* Light green for correct */
+        }
+        .quiz-option.incorrect {
+            background-color: #f8d7da; /* Light red for incorrect */
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 sm:p-6 lg:p-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold mb-2" style="color: #8B7E66;">دليل التجويد التفاعلي</h1>
+            <p class="text-lg text-gray-600">بوابتك لاستكشاف وفهم أحكام تلاوة القرآن الكريم</p>
+        </header>
+
+        <nav class="mb-8">
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4">
+                <button class="nav-button active" onclick="showTab('intro')">المقدمة</button>
+                <button class="nav-button" onclick="showTab('makharij')">مخارج الحروف</button>
+                <button class="nav-button" onclick="showTab('sifaat')">صفات الحروف</button>
+                <button class="nav-button" onclick="showTab('noon')">أحكام النون</button>
+                <button class="nav-button" onclick="showTab('meem')">أحكام الميم</button>
+                <button class="nav-button" onclick="showTab('madd')">أحكام المد</button>
+                <button class="nav-button" onclick="showTab('other')">أحكام أخرى</button>
+                <button class="nav-button" onclick="showTab('verse-analysis')">تحليل الآية </button>
+                <button class="nav-button" onclick="showTab('rule-inquiries')">استفسارات القواعد </button>
+                <button class="nav-button" onclick="showTab('terminology-explanation')">شرح المصطلحات </button>
+                <button class="nav-button" onclick="showTab('tajweed-quiz')">اختبار التجويد </button>
+                <button class="nav-button" onclick="showTab('common-mistakes')">الأخطاء الشائعة </button>
+                <button class="nav-button" onclick="showTab('practice-sentences')">جمل تدريبية </button>
+            </div>
+        </nav>
+
+        <main id="content-area">
+            
+            <!-- Section: Introduction -->
+            <section id="intro" class="tab-content">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4" style="color: #A0937D;">ما هو علم التجويد؟ What is Tajweed?</h2>
+                    <p class="mb-4 leading-relaxed">في هذا القسم التمهيدي، نستعرض مفهوم علم التجويد وأهميته البالغة في الحفاظ على سلامة نطق كلمات القرآن الكريم كما أُنزلت على النبي محمد صلى الله عليه وسلم. التجويد لغةً يعني التحسين، واصطلاحًا هو إخراج كل حرف من مخرجه وإعطاؤه حقه ومستحقه من الصفات. الهدف الأساسي من تعلم التجويد هو صون اللسان عن الخطأ في قراءة كتاب الله، وهو فرض عين على كل مسلم ومسلمة عند قراءة القرآن.</p>
+                    <p class="mb-4 leading-relaxed text-gray-700">In this introductory section, we explore the concept of Tajweed and its immense importance in preserving the correct pronunciation of the words of the Holy Quran as they were revealed to Prophet Muhammad (peace be upon him). Linguistically, Tajweed means 'to beautify' or 'to improve'. Technically, it means pronouncing every letter from its precise articulation point and giving it its due characteristics. The primary goal of learning Tajweed is to protect the tongue from errors in reciting the Book of Allah, and it is an individual obligation for every Muslim male and female when reciting the Quran.</p>
+                    <p class="leading-relaxed">سيوفر لك هذا الدليل التفاعلي الأدوات اللازمة لفهم القواعد الأساسية للتجويد، بدءًا من أساسيات النطق وصولًا إلى القواعد المتقدمة، بطريقة مبسطة ومدعومة بالأمثلة والرسوم التوضيحية التفاعلية. استخدم أزرار التنقل أعلاه للبدء في رحلتك التعليمية.</p>
+                    <p class="leading-relaxed text-gray-700">This interactive guide will provide you with the necessary tools to understand the fundamental rules of Tajweed, from basic pronunciation to advanced rules, in a simplified manner supported by examples and interactive illustrations. Use the navigation buttons above to begin your learning journey.</p>
+                </div>
+            </section>
+
+            <!-- Section: Makharij -->
+            <section id="makharij" class="tab-content hidden">
+                 <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">مخارج الحروف (Articulation Points)</h2>
+                    <p class="mb-6 text-center leading-relaxed">المخارج هي أماكن خروج الحروف من جهاز النطق. فهم هذه النقاط هو أساس النطق الصحيح لكل حرف. هذا القسم يقدم لك عرضًا تفاعليًا للمخارج الخمسة الرئيسية وتقسيماتها التفصيلية. انقر على كل مخرج فرعي لاستكشاف الحروف التي تخرج منه.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Makharij are the points of articulation from which Arabic letters emerge in the vocal system. Understanding these points is fundamental to the correct pronunciation of each letter. This section provides an interactive overview of the five general articulation points and their detailed sub-points. Click on each sub-point to explore the letters that originate from it.</p>
+                    <div id="makharij-interactive" class="space-y-4">
+                        <!-- Makhraj items will be injected by JS -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Sifaat -->
+            <section id="sifaat" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">صفات الحروف (Letter Characteristics)</h2>
+                    <p class="mb-6 text-center leading-relaxed">الصفات هي الكيفيات التي تعرض للحرف عند النطق به، وهي التي تميز الحروف المشتركة في المخرج. ينقسم هذا القسم إلى نوعين من الصفات: الصفات المتضادة والصفات غير المتضادة. تفاعل مع العناصر أدناه للتعرف على كل صفة وحروفها.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Sifaat are the qualities that accompany a letter during its pronunciation, distinguishing letters that may share an articulation point. This section is divided into two types of characteristics: those with opposites and those without. Interact with the elements below to learn about each characteristic and its associated letters.</p>
+                    <div class="grid md:grid-cols-2 gap-6">
+                        <div>
+                            <h3 class="text-xl font-bold mb-4 text-center" style="color: #8B7E66;">الصفات المتضادة (Characteristics with Opposites)</h3>
+                            <div id="sifaat-opposites" class="space-y-3">
+                                <!-- Sifaat with opposites injected here -->
+                            </div>
+                        </div>
+                        <div>
+                             <h3 class="text-xl font-bold mb-4 text-center" style="color: #8B7E66;">الصفات غير المتضادة (Characteristics without Opposites)</h3>
+                            <div id="sifaat-no-opposites" class="space-y-3">
+                                <!-- Sifaat without opposites injected here -->
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-8">
+                        <h3 class="text-xl font-bold mb-4 text-center" style="color: #8B7E66;">مقارنة بين عدد حروف بعض الصفات (Comparison of Letter Counts for Some Characteristics)</h3>
+                        <div class="chart-container">
+                            <canvas id="sifaatChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Noon Saakinah -->
+            <section id="noon" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">أحكام النون الساكنة والتنوين (Rules of Noon Saakinah and Tanween)</h2>
+                    <p class="mb-6 text-center leading-relaxed">تعتبر أحكام النون الساكنة (نْ) والتنوين (ـًـٍـٌ) من أكثر القواعد تكرارًا في القرآن الكريم. هناك أربعة أحكام رئيسية تعتمد على الحرف الذي يأتي بعدها. الرسم البياني أدناه يوضح توزيع حروف الهجاء على هذه الأحكام الأربعة، مما يعطيك فكرة عن مدى شيوع كل حكم.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">The rules of Noon Saakinah (نْ) and Tanween (ـًـٍـٌ) are among the most frequently encountered in the Holy Quran. There are four main rules depending on the letter that follows them. The chart below illustrates the distribution of Arabic letters across these four rules, giving you an idea of the prevalence of each rule.</p>
+                    <div class="chart-container mb-8">
+                        <canvas id="noonChart"></canvas>
+                    </div>
+                    <div id="noon-rules" class="space-y-4">
+                         <!-- Noon rules content injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Meem Saakinah -->
+            <section id="meem" class="tab-content hidden">
+                 <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">أحكام الميم الساكنة (Rules of Meem Saakinah)</h2>
+                     <p class="mb-6 text-center leading-relaxed">للميم الساكنة (مْ) ثلاثة أحكام تعتمد على الحرف الذي يليها. هذه الأحكام أبسط من أحكام النون الساكنة ولكنها لا تقل عنها أهمية للنطق الصحيح. استكشف القواعد الثلاث أدناه مع أمثلتها.</p>
+                     <p class="mb-6 text-center leading-relaxed text-gray-700">Meem Saakinah (مْ) has three rules depending on the letter that follows it. These rules are simpler than those of Noon Saakinah but are no less important for correct pronunciation. Explore the three rules below with their examples.</p>
+                    <div id="meem-rules" class="space-y-4">
+                         <!-- Meem rules content injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Madd -->
+            <section id="madd" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">أحكام المد (Rules of Prolongation)</h2>
+                    <p class="mb-6 text-center leading-relaxed">المد هو إطالة الصوت بأحد حروف المد الثلاثة (ا, و, ي). ينقسم المد إلى قسمين رئيسيين: أصلي وفرعي. هذا القسم يشرح الأنواع المختلفة للمد، مدة كل منها، وشروط تطبيقها. الرسم البياني التالي يقارن بين مدد الإطالة المختلفة لمساعدتك على تصور الفروقات.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Madd (prolongation) is the elongation of the sound of one of the three Madd letters (Alif, Waw, Yaa). Madd is divided into two main types: Original (Asli) and Secondary (Far'iee). This section explains the different types of Madd, their durations, and the conditions for their application. The following chart compares the different prolongation durations to help you visualize the differences.</p>
+                    <div class="chart-container mb-8">
+                        <canvas id="maddChart"></canvas>
+                    </div>
+                    <div id="madd-rules" class="space-y-4">
+                         <!-- Madd rules content injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: Other Rules -->
+            <section id="other" class="tab-content hidden">
+                 <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">أحكام أخرى هامة (Other Important Rules)</h2>
+                    <p class="mb-6 text-center leading-relaxed">بالإضافة إلى القواعد الرئيسية، هناك مفاهيم وقواعد أخرى ضرورية لإتقان التجويد، مثل القلقلة، وقواعد التفخيم والترقيق لحرفي الراء واللام، وعلامات الوقف. هذا القسم يلقي الضوء على هذه الأحكام الهامة.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">In addition to the main rules, there are other essential concepts and rules necessary for mastering Tajweed, such as Qalqalah, the rules of Tafkheem (heaviness) and Tarqeeq (lightness) for the letters Ra and Laam, and stopping signs. This section highlights these important rules.</p>
+                    <div id="other-rules" class="space-y-4">
+                         <!-- Other rules content injected here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: AI-Powered Verse Analysis -->
+            <section id="verse-analysis" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">تحليل الآية بواسطة الذكاء الاصطناعي ✨ (AI-Powered Verse Analysis)</h2>
+                    <p class="mb-6 text-center leading-relaxed">يمكنك هنا إدخال آية قرآنية قصيرة أو جزء منها، وسيقوم نظام الذكاء الاصطناعي بتحليلها لاستخراج وتوضيح أحكام التجويد المطبقة فيها. هذه الميزة ستساعدك على التدرب عمليًا وتطبيق القواعد التي تعلمتها.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Here you can enter a short Quranic verse or part of it, and the AI system will analyze it to extract and clarify the Tajweed rules applicable therein. This feature will help you practice practically and apply the rules you have learned.</p>
+                    <div class="mb-4">
+                        <label for="verseInput" class="block text-gray-700 text-lg font-bold mb-2">أدخل الآية هنا (Enter the verse here):</label>
+                        <textarea id="verseInput" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none" placeholder="مثال: بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ"></textarea>
+                    </div>
+                    <div class="text-center mb-6">
+                        <button class="gemini-button" onclick="analyzeVerse()">
+                            <span id="analyzeVerseButtonText">تحليل الآية</span>
+                            <div id="analyzeVerseSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="verseAnalysisResult" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[100px] text-gray-800 leading-relaxed text-right">
+                        <p class="text-gray-500">سيظهر تحليل الآية هنا...</p>
+                        <p class="text-gray-500">Verse analysis will appear here...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: AI-Powered Rule Inquiries -->
+            <section id="rule-inquiries" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">استفسارات القواعد بواسطة الذكاء الاصطناعي ✨ (AI-Powered Rule Inquiries)</h2>
+                    <p class="mb-6 text-center leading-relaxed">لديك سؤال حول قاعدة تجويدية؟ اكتب سؤالك هنا وسيقوم نظام الذكاء الاصطناعي بتقديم شرح مفصل وواضح باللغتين العربية والإنجليزية، مع أمثلة لمساعدتك على الفهم العميق.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Have a question about a Tajweed rule? Type your question here, and the AI system will provide a detailed and clear explanation in both Arabic and English, with examples to help you understand deeply.</p>
+                    <div class="mb-4">
+                        <label for="ruleQueryInput" class="block text-gray-700 text-lg font-bold mb-2">ما هو سؤالك؟ (What is your question?):</label>
+                        <textarea id="ruleQueryInput" rows="4" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline resize-none" placeholder="مثال: ما هو حكم الإخفاء الشفوي؟"></textarea>
+                    </div>
+                    <div class="text-center mb-6">
+                        <button class="gemini-button" onclick="askRuleQuestion()">
+                            <span id="askRuleQuestionButtonText">اسأل الذكاء الاصطناعي</span>
+                            <div id="askRuleQuestionSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="ruleQueryResponse" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[100px] text-gray-800 leading-relaxed text-right">
+                        <p class="text-gray-500">ستظهر الإجابة هنا...</p>
+                        <p class="text-gray-500">The answer will appear here...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: AI-Powered Terminology Explanation -->
+            <section id="terminology-explanation" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">شرح المصطلحات التجويدية بواسطة الذكاء الاصطناعي ✨ (AI-Powered Terminology Explanation)</h2>
+                    <p class="mb-6 text-center leading-relaxed">هل واجهت مصطلحًا تجويديًا غير مألوف؟ اكتب المصطلح هنا وسيقوم نظام الذكاء الاصطناعي بشرحه لك بشكل مفصل باللغتين العربية والإنجليزية، مع أمثلة إن وجدت.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Encountered an unfamiliar Tajweed term? Type the term here, and the AI system will explain it in detail for you in both Arabic and English, with examples if applicable.</p>
+                    <div class="mb-4">
+                        <label for="termInput" class="block text-gray-700 text-lg font-bold mb-2">أدخل المصطلح هنا (Enter the term here):</label>
+                        <input type="text" id="termInput" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="مثال: الإمالة">
+                    </div>
+                    <div class="text-center mb-6">
+                        <button class="gemini-button" onclick="explainTajweedTerm()">
+                            <span id="explainTermButtonText">اشرح المصطلح</span>
+                            <div id="explainTermSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="termExplanationResult" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[100px] text-gray-800 leading-relaxed text-right">
+                        <p class="text-gray-500">سيظهر شرح المصطلح هنا...</p>
+                        <p class="text-500">The term explanation will appear here...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: AI-Powered Tajweed Quiz -->
+            <section id="tajweed-quiz" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">اختبار التجويد بواسطة الذكاء الاصطناعي ✨ (AI-Powered Tajweed Quiz)</h2>
+                    <p class="mb-6 text-center leading-relaxed">اختبر فهمك لأحكام التجويد من خلال أسئلة يولدها الذكاء الاصطناعي. اختر موضوعًا، ثم اضغط على "توليد الاختبار" للحصول على أسئلة جديدة.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Test your understanding of Tajweed rules with AI-generated questions. Select a topic, then click "Generate Quiz" to get new questions.</p>
+                    <div class="mb-4 text-center">
+                        <label for="quizTopicSelect" class="block text-gray-700 text-lg font-bold mb-2">اختر موضوع الاختبار (Select Quiz Topic):</label>
+                        <select id="quizTopicSelect" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full md:w-1/2 lg:w-1/3">
+                            <option value="أحكام النون الساكنة والتنوين">أحكام النون الساكنة والتنوين (Noon Saakinah & Tanween Rules)</option>
+                            <option value="أحكام الميم الساكنة">أحكام الميم الساكنة (Meem Saakinah Rules)</option>
+                            <option value="أحكام المد">أحكام المد (Madd Rules)</option>
+                            <option value="صفات الحروف">صفات الحروف (Letter Characteristics)</option>
+                            <option value="مخارج الحروف">مخارج الحروف (Articulation Points)</option>
+                            <option value="أحكام أخرى">أحكام أخرى (Other Rules)</option>
+                        </select>
+                    </div>
+                    <div class="text-center mb-6">
+                        <button class="gemini-button" onclick="generateQuiz()">
+                            <span id="generateQuizButtonText">توليد الاختبار</span>
+                            <div id="generateQuizSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="quizQuestions" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[150px] text-gray-800 leading-relaxed text-right">
+                        <p class="text-gray-500">سيظهر الاختبار هنا...</p>
+                        <p class="text-gray-500">The quiz will appear here...</p>
+                    </div>
+                    <div class="text-center mt-6 hidden" id="showAnswersContainer">
+                        <button class="gemini-button bg-orange-500 hover:bg-orange-600" onclick="revealAnswers()">
+                            <span id="revealAnswersButtonText">عرض الإجابات</span>
+                            <div id="revealAnswersSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="quizAnswers" class="bg-blue-50 p-4 rounded-lg border border-blue-200 mt-4 text-gray-800 leading-relaxed text-right hidden">
+                        <h3 class="text-xl font-bold mb-2" style="color:#6D6250;">الإجابات الصحيحة (Correct Answers):</h3>
+                        <p class="text-gray-500">الإجابات ستظهر هنا...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: AI-Powered Common Mistakes -->
+            <section id="common-mistakes" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">الأخطاء الشائعة والنصائح بواسطة الذكاء الاصطناعي ✨ (AI-Powered Common Mistakes & Tips)</h2>
+                    <p class="mb-6 text-center leading-relaxed">تعرف على الأخطاء الشائعة في تطبيق قواعد التجويد لكل موضوع، واحصل على نصائح عملية لتصحيحها من الذكاء الاصطناعي.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Learn about common mistakes in applying Tajweed rules for each topic, and get practical tips to correct them from the AI.</p>
+                    <div class="mb-4 text-center">
+                        <label for="mistakesTopicSelect" class="block text-gray-700 text-lg font-bold mb-2">اختر موضوعًا لعرض الأخطاء (Select a Topic for Mistakes):</label>
+                        <select id="mistakesTopicSelect" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full md:w-1/2 lg:w-1/3">
+                            <option value="أحكام النون الساكنة والتنوين">أحكام النون الساكنة والتنوين (Noon Saakinah & Tanween Rules)</option>
+                            <option value="أحكام الميم الساكنة">أحكام الميم الساكنة (Meem Saakinah Rules)</option>
+                            <option value="أحكام المد">أحكام المد (Madd Rules)</option>
+                            <option value="صفات الحروف">صفات الحروف (Letter Characteristics)</option>
+                            <option value="مخارج الحروف">مخارج الحروف (Articulation Points)</option>
+                            <option value="القلقلة">القلقلة (Qalqalah)</option>
+                            <option value="أحكام الراء">أحكام الراء (Rules of Ra)</option>
+                        </select>
+                    </div>
+                    <div class="text-center mb-6">
+                        <button class="gemini-button" onclick="getCommonMistakes()">
+                            <span id="getMistakesButtonText">عرض الأخطاء والنصائح</span>
+                            <div id="getMistakesSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="commonMistakesResult" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[100px] text-gray-800 leading-relaxed text-right">
+                        <p class="text-gray-500">ستظهر الأخطاء الشائعة والنصائح هنا...</p>
+                        <p class="text-gray-500">Common mistakes and tips will appear here...</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Section: AI-Powered Practice Sentences -->
+            <section id="practice-sentences" class="tab-content hidden">
+                <div class="tajweed-card">
+                    <h2 class="text-2xl font-bold mb-4 text-center" style="color: #A0937D;">جمل تدريبية بواسطة الذكاء الاصطناعي ✨ (AI-Powered Practice Sentences)</h2>
+                    <p class="mb-6 text-center leading-relaxed">اختر قاعدة تجويدية، وسيقوم الذكاء الاصطناعي بتوليد جمل وعبارات قرآنية قصيرة لمساعدتك على التدرب على تطبيق هذه القاعدة.</p>
+                    <p class="mb-6 text-center leading-relaxed text-gray-700">Select a Tajweed rule, and the AI will generate short Quranic sentences and phrases to help you practice applying that rule.</p>
+                    <div class="mb-4 text-center">
+                        <label for="practiceTopicSelect" class="block text-gray-700 text-lg font-bold mb-2">اختر قاعدة للتدريب (Select a Rule for Practice):</label>
+                        <select id="practiceTopicSelect" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline w-full md:w-1/2 lg:w-1/3">
+                            <option value="الإظهار">الإظهار (Izhaar)</option>
+                            <option value="الإدغام">الإدغام (Idghaam)</option>
+                            <option value="الإقلاب">الإقلاب (Iqlaab)</option>
+                            <option value="الإخفاء">الإخفاء (Ikhfaa)</option>
+                            <option value="المد الطبيعي">المد الطبيعي (Natural Madd)</option>
+                            <option value="المد الواجب المتصل">المد الواجب المتصل (Obligatory Joined Madd)</option>
+                            <option value="المد الجائز المنفصل">المد الجائز المنفصل (Permissible Separated Madd)</option>
+                            <option value="القلقلة">القلقلة (Qalqalah)</option>
+                            <option value="تفخيم الراء">تفخيم الراء (Heavy Ra)</option>
+                            <option value="ترقيق الراء">ترقيق الراء (Light Ra)</option>
+                            <option value="الغنة">الغنة (Ghunnah)</option>
+                        </select>
+                    </div>
+                    <div class="text-center mb-6">
+                        <button class="gemini-button" onclick="generatePracticeSentences()">
+                            <span id="generatePracticeSentencesButtonText">توليد الجمل</span>
+                            <div id="generatePracticeSentencesSpinner" class="hidden loading-spinner"></div>
+                        </button>
+                    </div>
+                    <div id="practiceSentencesResult" class="bg-gray-50 p-4 rounded-lg border border-gray-200 min-h-[100px] text-gray-800 leading-relaxed text-right">
+                        <p class="text-gray-500">ستظهر الجمل التدريبية هنا...</p>
+                        <p class="text-gray-500">Practice sentences will appear here...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+<script>
+const data = {
+    makharij: [
+        { 
+            name_ar: "الجوف",
+            name_en: "The Oral Cavity (Al-Jawf)",
+            description_ar: "الفضاء الخالي داخل الفم والحلق. وهو مخرج حروف المد الثلاثة.",
+            description_en: "The empty space within the mouth and throat. It is the articulation point for the three Madd letters.",
+            letters: "ا, و, ي (المدية / Madd letters)",
+            sub_points: []
+        },
+        { 
+            name_ar: "الحلق",
+            name_en: "The Throat (Al-Halq)",
+            description_ar: "ينقسم إلى ثلاثة أجزاء، يخرج منها ستة أحرف.",
+            description_en: "Divided into three distinct sections, from which six letters emerge.",
+            sub_points: [
+                {
+                    name_ar: "أقصى الحلق (Deepest Throat)",
+                    name_en: "Aqsal-Halq",
+                    letters: "ء, هـ",
+                    description_ar: "أبعد جزء من الحلق عن الفم.",
+                    description_en: "The farthest part of the throat from the mouth."
+                },
+                {
+                    name_ar: "وسط الحلق (Middle Throat)",
+                    name_en: "Wasatul-Halq",
+                    letters: "ع, ح",
+                    description_ar: "الجزء الأوسط من الحلق.",
+                    description_en: "The middle region of the throat."
+                },
+                {
+                    name_ar: "أدنى الحلق (Closest Throat)",
+                    name_en: "Adnal-Halq",
+                    letters: "غ, خ",
+                    description_ar: "أقرب جزء من الحلق إلى الفم.",
+                    description_en: "The closest part of the throat to the mouth."
+                }
+            ]
+        },
+        {
+            name_ar: "اللسان",
+            name_en: "The Tongue (Al-Lisan)",
+            description_ar: "أكثر المخارج حروفًا، وينقسم إلى أقصى اللسان، ووسطه، وحافته، وطرفه.",
+            description_en: "The most versatile articulator, divided into its deepest part, middle, sides, and tip.",
+            sub_points: [
+                {
+                    name_ar: "أقصى اللسان (Deepest Tongue)",
+                    name_en: "Aqsal-Lisan",
+                    letters: "ق",
+                    description_ar: "أقصى اللسان مع ما فوقه من الحنك اللحمي (اللهاة).",
+                    description_en: "The deepest part of the tongue with the soft palate (uvula)."
+                },
+                 {
+                    name_ar: "أقصى اللسان (Deepest Tongue) أسفل قليلاً",
+                    name_en: "Aqsal-Lisan (Slightly Lower)",
+                    letters: "ك",
+                    description_ar: "أقصى اللسان مع ما فوقه من الحنك اللحمي والعظمي.",
+                    description_en: "The deepest part of the tongue with the soft and hard palates."
+                },
+                {
+                    name_ar: "وسط اللسان (Middle Tongue)",
+                    name_en: "Wasatul-Lisan",
+                    letters: "ج, ش, ي (غير المدية / Non-Madd)",
+                    description_ar: "وسط اللسان مع ما يحاذيه من الحنك الأعلى.",
+                    description_en: "The middle of the tongue with the part of the upper palate opposite to it."
+                },
+                {
+                    name_ar: "حافة اللسان (Edge of Tongue) من الخلف",
+                    name_en: "Haafatayn al-Lisan (Posterior Edge)",
+                    letters: "ض",
+                    description_ar: "إحدى حافتي اللسان أو كلتاهما مع الأضراس العليا.",
+                    description_en: "One or both sides of the tongue with the upper molar teeth."
+                },
+                {
+                    name_ar: "حافة اللسان (Edge of Tongue) من الأمام",
+                    name_en: "Haafatayn al-Lisan (Anterior Edge)",
+                    letters: "ل",
+                    description_ar: "أدنى حافتي اللسان إلى منتهاها مع ما يليها من اللثة.",
+                    description_en: "The front part of the sides of the tongue with the gum line."
+                },
+                {
+                    name_ar: "طرف اللسان (Tip of Tongue) مع لثة الثنايا العليا",
+                    name_en: "Ra's al-Lisan (Tip with Upper Gums)",
+                    letters: "ن",
+                    description_ar: "طرف اللسان تحت مخرج اللام بقليل مع لثة الثنايا العليا.",
+                    description_en: "The tip of the tongue slightly below the Laam's Makhraj with the upper gum line."
+                },
+                 {
+                    name_ar: "طرف اللسان (Tip of Tongue) مع ظهر طرفه",
+                    name_en: "Ra's al-Lisan (Tip with Back of Tip)",
+                    letters: "ر",
+                    description_ar: "طرف اللسان مع ظهر طرفه، مع ما يحاذيه من لثة الثنايا العليا.",
+                    description_en: "The tip of the tongue with the back of its tip, opposing the upper gum line."
+                },
+                {
+                    name_ar: "طرف اللسان (Tip of Tongue) مع أصول الثنايا العليا",
+                    name_en: "Ra's al-Lisan (Tip with Roots of Upper Incisors)",
+                    letters: "ت, د, ط",
+                    description_ar: "طرف اللسان مع أصول الثنايا العليا.",
+                    description_en: "The tip of the tongue with the roots of the upper front teeth."
+                },
+                {
+                    name_ar: "طرف اللسان (Tip of Tongue) بين الثنايا العليا والسفلى",
+                    name_en: "Ra's al-Lisan (Tip between Incisors)",
+                    letters: "ص, س, ز",
+                    description_ar: "طرف اللسان فوق الثنايا السفلى مع الإبقاء على فرجة صغيرة يمر منها الصوت (الصفير).",
+                    description_en: "The tip of the tongue above the lower front teeth, leaving a small gap for the whistling sound (Safeer)."
+                },
+                {
+                    name_ar: "طرف اللسان (Tip of Tongue) مع أطراف الثنايا العليا",
+                    name_en: "Ra's al-Lisan (Tip with Edges of Upper Incisors)",
+                    letters: "ظ, ذ, ث",
+                    description_ar: "طرف اللسان مع أطراف الثنايا العليا.",
+                    description_en: "The tip of the tongue with the edges of the upper front teeth."
+                }
+            ]
+        },
+        {
+            name_ar: "الشفتان",
+            name_en: "The Two Lips (Ash-Shafatayn)",
+            description_ar: "يخرج منه أربعة حروف.",
+            description_en: "From which four letters emerge.",
+            sub_points: [
+                {
+                    name_ar: "بطن الشفة السفلى مع أطراف الثنايا العليا",
+                    name_en: "Inner Lower Lip with Upper Incisors",
+                    letters: "ف",
+                    description_ar: "بطن الشفة السفلى مع أطراف الثنايا العليا.",
+                    description_en: "The inner part of the lower lip with the tips of the upper front teeth."
+                },
+                {
+                    name_ar: "بين الشفتين مع الانفتاح",
+                    name_en: "Between the Lips with Opening",
+                    letters: "و (غير المدية / Non-Madd)",
+                    description_ar: "بضم الشفتين مع انفراجهما قليلاً.",
+                    description_en: "By rounding the lips with a slight opening."
+                },
+                {
+                    name_ar: "بين الشفتين مع الانطباق",
+                    name_en: "Between the Lips with Closure",
+                    letters: "ب, م",
+                    description_ar: "بإطباق الشفتين، الميم بغنة والباء بدون غنة.",
+                    description_en: "By closing the lips; Meem with Ghunnah, Baa without."
+                }
+            ]
+        },
+        {
+            name_ar: "الخيشوم",
+            name_en: "The Nasal Cavity (Al-Khayshoom)",
+            description_ar: "مخرج الغنة، وهي صفة ملازمة لحرفي النون والميم.",
+            description_en: "The articulation point for Ghunnah (nasalization), an inherent quality of Noon and Meem.",
+            letters: "الغنة (صوت النون والميم / Ghunnah - sound of Noon and Meem)",
+            sub_points: []
+        },
+    ],
+    sifaat: {
+        opposites: [
+            { name_ar: "الهمس", name_en: "Al-Hems (Whispering)", letters: "ف, ح, ث, هـ, ش, خ, ص, س, ك, ت", vs_ar: "الجهر", vs_en: "Al-Jahr (Voicing)", letters_vs: "بقية الحروف / Remaining letters", desc_ar: "جريان النفس عند النطق بالحرف.", desc_en: "Weak or slight continuation of breath upon pronunciation." },
+            { name_ar: "الشدة", name_en: "Ash-Shiddah (Strength)", letters: "أ, ج, د, ق, ط, ب, ك, ت", vs_ar: "الرخاوة", vs_en: "Ar-Rakhaawa (Looseness)", letters_vs: "بقية الحروف ما عدا حروف التوسط / Remaining letters except Tawassut", desc_ar: "انحباس الصوت عند النطق بالحرف.", desc_en: "Complete stoppage of sound flow at the Makhraj." },
+            { name_ar: "الاستعلاء", name_en: "Al-Isti'laa (Elevation)", letters: "خ, ص, ض, غ, ط, ق, ظ", vs_ar: "الاستفال", vs_en: "Al-Istifaal (Lowering)", letters_vs: "بقية الحروف / Remaining letters", desc_ar: "ارتفاع أقصى اللسان عند النطق بالحرف.", desc_en: "Raising the back of the tongue towards the roof of the mouth." },
+            { name_ar: "الإطباق", name_en: "Al-Itbaaq (Adhesion)", letters: "ص, ض, ط, ظ", vs_ar: "الانفتاح", vs_en: "Al-Infitaah (Openness)", letters_vs: "بقية الحروف / Remaining letters", desc_ar: "إلصاق جزء كبير من اللسان بالحنك الأعلى.", desc_en: "Contact or near-contact between a large part of the tongue and the upper palate." },
+            { name_ar: "الإذلاق", name_en: "Al-Idhlaaq (Fluency)", letters: "ف, ر, م, ن, ل, ب", vs_ar: "الإصمات", vs_en: "Al-Ismaat (Restraint)", letters_vs: "بقية الحروف / Remaining letters", desc_ar: "سرعة النطق بالحرف لخروجه من ذلق اللسان أو الشفتين.", desc_en: "Letters that are easy to pronounce and flow smoothly from the tongue or lips." },
+        ],
+        no_opposites: [
+            { name_ar: "الصفير", name_en: "As-Safeer (Whistling)", letters: "ص, س, ز", description_ar: "صوت حاد يشبه الصفير يصاحب الحرف.", description_en: "A sharp, whistling sound produced from the tip of the tongue and the front teeth." },
+            { name_ar: "القلقلة", name_en: "Al-Qalqalah (Echoing)", letters: "ق, ط, ب, ج, د", description_ar: "اهتزاز صوت الحرف الساكن في مخرجه حتى يُسمع له نبرة قوية.", description_en: "A disturbance or echo sound produced when certain letters with Sukoon are pronounced, without adding a vowel." },
+            { name_ar: "اللين", name_en: "Al-Leen (Softness)", letters: "و, ي (الساكنتان المفتوح ما قبلهما / Saakinah preceded by Fathah)", description_ar: "إخراج الحرف بسهولة وعدم كلفة.", description_en: "The smooth and easy pronunciation of Waw Saakinah or Yaa Saakinah when preceded by a Fathah." },
+            { name_ar: "الانحراف", name_en: "Al-Inhiraaf (Deviation)", letters: "ل, ر", description_ar: "ميل صوت الحرف عن مخرجه.", description_en: "The sound of the letter deviates or inclines from its original Makhraj due to the tongue's position." },
+            { name_ar: "التكرير", name_en: "At-Takreer (Repetition)", letters: "ر", description_ar: "ارتعاد طرف اللسان عند النطق بالراء (يجب تجنب المبالغة فيه).", description_en: "A slight vibration or trilling of the tongue when pronouncing the letter, though excessive repetition should be avoided." },
+            { name_ar: "التفشي", name_en: "At-Tafashee (Spreading)", letters: "ش", description_ar: "انتشار الهواء في الفم عند النطق بالشين.", description_en: "The spreading of the sound of the letter in the mouth from its Makhraj until it hits the inner surface of the teeth." },
+            { name_ar: "الاستطالة", name_en: "Al-Istitaalah (Lengthening)", letters: "ض", description_ar: "امتداد صوت الضاد في مخرجها.", description_en: "The lengthening of the sound of the letter along the edge of the tongue from its Makhraj until it reaches the Makhraj of the Laam." },
+        ]
+    },
+    noon_rules: [
+        { id: "izhaar", name_ar: "الإظهار", name_en: "Izhaar (Clarity)", letters: "أ, هـ, ع, ح, غ, خ", description_ar: "نطق النون الساكنة أو التنوين بشكل واضح بدون غنة.", description_en: "Pronouncing Noon Saakinah or Tanween clearly and distinctly, without any nasalization (Ghunnah).", example: "مِنْهُم، عليمٌ حكيم / Minhum, Aleemun Hakeem" },
+        { id: "idgham", name_ar: "الإدغام", name_en: "Idghaam (Merging)", letters: "ي, ر, م, ل, و, ن", description_ar: "إدخال النون الساكنة أو التنوين في الحرف التالي. ينقسم إلى إدغام بغنة (ينمو) وإدغام بغير غنة (ل, ر).", description_en: "Merging the sound of Noon Saakinah or Tanween into the following letter. Divided into Idghaam Bi Ghunnah (with nasalization) and Idghaam Bila Ghunnah (without nasalization).", example: "مَن يشاء، مِن ربك / Man Yashaa', Min Rabbika" },
+        { id: "iqlaab", name_ar: "الإقلاب", name_en: "Iqlaab (Flipping)", letters: "ب", description_ar: "قلب النون الساكنة أو التنوين ميماً مخفاة بغنة.", description_en: "Converting or flipping the sound of Noon Saakinah or Tanween into a Meem sound when followed by Baa.", example: "مِنْ بَعْدِ، سميعٌ بصير / Min Ba'di, Samee'un Baseer" },
+        { id: "ikhfaa", name_ar: "الإخفاء", name_en: "Ikhfaa (Hiding)", letters: "بقية الحروف (15 حرفًا) / Remaining letters (15 letters)", description_ar: "النطق بالنون الساكنة أو التنوين بحالة بين الإظهار والإدغام مع بقاء الغنة.", description_en: "Hiding or concealing the sound of Noon Saakinah or Tanween in the nose, without fully articulating it or merging it completely into the following letter, with Ghunnah.", example: "الإنسان، ريحًا صرصرًا / Al-Insaan, Reehan Sarsaaran" },
+    ],
+    meem_rules: [
+        { id: "idgham_shafawy", name_ar: "الإدغام الشفوي", name_en: "Idghaam Shafawy (Labial Merging)", letters: "م", description_ar: "إدغام الميم الساكنة في الميم التي تليها مع غنة كاملة.", description_en: "Merging Meem Saakinah into the following Meem with a complete Ghunnah.", example: "لَهُمْ مَّا / Lahum Maa" },
+        { id: "ikhfaa_shafawy", name_ar: "الإخفاء الشفوي", name_en: "Ikhfaa Shafawy (Labial Concealment)", letters: "ب", description_ar: "إخفاء الميم الساكنة عند ملاقاتها للباء مع بقاء الغنة.", description_en: "Concealing Meem Saakinah when followed by Baa, performed with a Ghunnah and a slight gap between the lips.", example: "تَرْمِيهِم بِحِجَارَةٍ / Tarmeehim Bi-hijaarah" },
+        { id: "izhaar_shafawy", name_ar: "الإظهار الشفوي", name_en: "Izhaar Shafawy (Labial Clarity)", letters: "بقية الحروف / Remaining letters", description_ar: "نطق الميم الساكنة بشكل واضح بدون غنة زائدة.", description_en: "Pronouncing Meem Saakinah clearly and distinctly without extra Ghunnah (nasalization).", example: "لَكُمْ دِينُكُمْ / Lakum Deenukum" },
+    ],
+    madd_rules: [
+        { id: "asli", name_ar: "المد الأصلي (الطبيعي)", name_en: "Al-Madd Al-Asli (Natural Prolongation)", description_ar: "هو المد الذي لا تقوم ذات الحرف إلا به ولا يتوقف على سبب. مقداره حركتان.", description_en: "The fundamental prolongation without an external cause, two counts in duration.", example: "قَالَ، يَقُولُ، قِيلَ / Qaala, Yaqoolu, Qeela" },
+        { id: "mutasil", name_ar: "المد الواجب المتصل", name_en: "Al-Madd Al-Waajib Al-Mutasil (Obligatory Joined)", description_ar: "أن يأتي بعد حرف المد همزة في نفس الكلمة. مقداره 4 أو 5 حركات.", description_en: "A Hamzah follows a Madd letter within the same word, 4 or 5 counts.", example: "السَّمَاءُ، جَاءَ / As-Samaa'u, Jaa'a" },
+        { id: "munfasil", name_ar: "المد الجائز المنفصل", name_en: "Al-Madd Al-Jaa’ez Al-Munfasil (Permissible Separated)", description_ar: "أن يأتي حرف المد في آخر كلمة والهمزة في أول الكلمة التالية. مقداره 2 أو 4 أو 5 حركات.", description_en: "A Madd letter is at the end of a word, and a Hamzah is at the beginning of the next word, 2, 4, or 5 counts.", example: "يَا أَيُّهَا، بِمَا أُنْزِلَ / Yaa Ayyuha, Bimaa Unzila" },
+        { id: "aarid", name_ar: "المد العارض للسكون", name_en: "Al-Madd Al-‘Aarid Lil Sukoon (Temporary Prolongation)", description_ar: "أن يأتي بعد حرف المد حرف ساكن سكونًا عارضًا بسبب الوقف. مقداره 2 أو 4 أو 6 حركات.", description_en: "A Madd letter is followed by a temporary Sukoon due to stopping on the word, 2, 4, or 6 counts.", example: "الْعَالَمِينَ (عند الوقف) / Al-'Alameen (when stopping)" },
+        { id: "leen", name_ar: "مد اللين", name_en: "Al-Madd Al-Leen (Softness Prolongation)", description_ar: "هو مد الواو أو الياء الساكنتين المفتوح ما قبلهما إذا جاء بعدهما حرف ساكن بسبب الوقف. مقداره 2 أو 4 أو 6 حركات.", description_en: "Prolongation of Waw Saakinah or Yaa Saakinah preceded by a Fathah, when stopping on the word, 2, 4, or 6 counts.", example: "خَوْفٌ، بَيْتٌ (عند الوقف) / Khawf, Bayt (when stopping)" },
+        { id: "laazim", name_ar: "المد اللازم", name_en: "Al-Madd Al-Laazim (Necessary Prolongation)", description_ar: "أن يأتي بعد حرف المد سكون أصلي. مقداره 6 حركات. وهو كلمي وحرفي، مثقل ومخفف.", description_en: "A Madd letter is followed by an original Sukoon. Always 6 counts. Divided into word-based and letter-based, heavy and light.", example: "الضَّالِّينَ، الۤمۤ / Ad-Daalleen, Alif Laam Meem" }
+    ],
+    other_rules: [
+        { id: "qalqalah", name_ar: "القلقلة", name_en: "Al-Qalqalah (Echoing)", description_ar: "اضطراب الصوت في مخرج الحرف الساكن عند النطق به. حروفها (قطب جد). لها ثلاث مراتب: كبرى، وسطى، صغرى.", description_en: "A disturbance or echo sound produced when certain letters with Sukoon are pronounced. Its letters are (Qutb Jad). It has three levels: greater, medium, and lesser.", example: "الْفَلَقِ (كبرى)، يَقْطَعُونَ (صغرى) / Al-Falaq (greater), Yaqta'oon (lesser)" },
+        { id: "ra_rules", name_ar: "أحكام الراء", name_en: "Rules of Ra", description_ar: "للراء أحوال من حيث التفخيم والترقيق. تفخم إذا كانت مفتوحة أو مضمومة، وترقق إذا كانت مكسورة، ولها أحوال أخرى عند سكونها.", description_en: "Ra has conditions for Tafkheem (heaviness) and Tarqeeq (lightness). It is heavy when it has Fathah or Dammah, and light when it has Kasrah, with other conditions when it is Saakin.", example: "رَحْمَة (تفخيم)، رِجَال (ترقيق) / Rahmah (heavy), Rijaal (light)"},
+        { id: "allah_laam", name_ar: "لام لفظ الجلالة (الله)", name_en: "Laam in 'Allah'", description_ar: "تفخم لام لفظ الجلالة إذا سبقها فتح أو ضم، وترقق إذا سبقها كسر.", description_en: "The Laam in the word 'Allah' is pronounced heavily if preceded by a Fathah or Dammah, and lightly if preceded by a Kasrah.", example: "قَالَ اللهُ (تفخيم)، بِسْمِ اللهِ (ترقيق) / Qaalallahu (heavy), Bismillahi (light)"},
+        { id: "ghunnah", name_ar: "الغنة", name_en: "Al-Ghunnah (Nasalization)", description_ar: "صوت يخرج من الخيشوم (الأنف) ملازم لحرفي النون والميم، ومقدارها حركتان.", description_en: "A prolonged nasal sound originating from the nasal cavity, inherent in the letters Noon and Meem, typically two counts in duration.", example: "إِنَّ، ثُمَّ / Inna, Thumma"},
+        { id: "stopping_signs", name_ar: "علامات الوقف", name_en: "Stopping Signs", description_ar: "رموز توضع في المصحف لإرشاد القارئ إلى مواضع الوقف الجائزة والممنوعة والمستحبة. مثل (م، لا، ج، صلى، قلى).", description_en: "Symbols placed in the Quranic script to guide the reciter on permissible, obligatory, or preferred stopping points. E.g., (م, لا, ج, صلى, قلى).", example: "م (وقف لازم)، لا (لا تقف) / Meem (obligatory stop), Laa (do not stop)"}
+    ]
+};
+
+let currentQuizQuestions = []; // Store questions globally for answers
+
+document.addEventListener('DOMContentLoaded', () => {
+    populateMakharij();
+    populateSifaat();
+    populateNoonRules();
+    populateMeemRules();
+    populateMaddRules();
+    populateOtherRules();
+    
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const tabId = entry.target.id;
+                if (tabId === 'sifaat' && !window.sifaatChartInstance) createSifaatChart();
+                if (tabId === 'noon' && !window.noonChartInstance) createNoonChart();
+                if (tabId === 'madd' && !window.maddChartInstance) createMaddChart();
+            }
+        });
+    }, { threshold: 0.1 });
+
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        observer.observe(tab);
+    });
+});
+
+function showTab(tabId) {
+    document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.add('hidden');
+    });
+    document.getElementById(tabId).classList.remove('hidden');
+
+    document.querySelectorAll('.nav-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    document.querySelector(`.nav-button[onclick="showTab('${tabId}')"]`).classList.add('active');
+}
+
+async function createAccordion(title_ar, title_en, content_ar, content_en, parentElementId, ruleId = null) {
+    const parent = document.getElementById(parentElementId);
+    
+    const container = document.createElement('div');
+    container.className = 'border border-gray-200 rounded-lg overflow-hidden';
+
+    const button = document.createElement('button');
+    button.className = 'w-full text-right p-4 bg-gray-50 hover:bg-gray-100 focus:outline-none flex justify-between items-center transition-colors';
+    button.innerHTML = `<span class="font-bold text-lg" style="color:#6D6250;">${title_ar} <span class="text-gray-600 font-normal">(${title_en})</span></span><span class="transform transition-transform duration-300 text-xl" style="color:#A0937D;">+</span>`;
+    
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'accordion-content bg-white';
+    let fullContentHtml = `<div class="p-4 border-t border-gray-200">
+                                <p class="mb-2 leading-relaxed">${content_ar}</p>
+                                <p class="mb-2 leading-relaxed text-gray-700">${content_en}</p>
+                            </div>`;
+
+    if (ruleId && parentElementId === 'noon-rules') { // Only for Noon rules initially
+        fullContentHtml += `
+            <div class="p-4 border-t border-gray-200 text-center">
+                <button class="gemini-button" onclick="generateExamplesForRule('${ruleId}')">
+                    <span id="genExampleBtnText_${ruleId}">أمثلة إضافية </span>
+                    <div id="genExampleSpinner_${ruleId}" class="hidden loading-spinner"></div>
+                </button>
+                <div id="additionalExamples_${ruleId}" class="mt-4 bg-yellow-50 p-3 rounded-md text-sm text-right leading-relaxed hidden"></div>
+            </div>
+        `;
+    }
+    contentDiv.innerHTML = fullContentHtml;
+
+    container.appendChild(button);
+    container.appendChild(contentDiv);
+    
+    parent.appendChild(container);
+    
+    button.addEventListener('click', () => {
+        const isExpanded = contentDiv.style.maxHeight && contentDiv.style.maxHeight !== '0px';
+        
+        parent.querySelectorAll('.accordion-content').forEach(el => {
+            el.style.maxHeight = '0px';
+            el.previousElementSibling.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+        });
+
+        if (isExpanded) {
+            contentDiv.style.maxHeight = '0px';
+            button.querySelector('span:last-child').style.transform = 'rotate(0deg)';
+        } else {
+            contentDiv.style.maxHeight = contentDiv.scrollHeight + 'px';
+            button.querySelector('span:last-child').style.transform = 'rotate(45deg)';
+        }
+    });
+}
+
+
+function populateMakharij() {
+    const container = document.getElementById('makharij-interactive');
+    container.innerHTML = '';
+    data.makharij.forEach(makhraj => {
+        if (makhraj.sub_points && makhraj.sub_points.length > 0) {
+            makhraj.sub_points.forEach(sub_makhraj => {
+                const content_ar = `
+                    <p class="mb-2">${sub_makhraj.description_ar}</p>
+                    <p class="font-bold">الحروف: <span class="flex flex-wrap gap-1">${sub_makhraj.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+                `;
+                const content_en = `
+                    <p class="mb-2">${sub_makhraj.description_en}</p>
+                    <p class="font-bold">Letters: <span class="flex flex-wrap gap-1">${sub_makhraj.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+                `;
+                createAccordion(`${makhraj.name_ar}: ${sub_makhraj.name_ar}`, `${makhraj.name_en}: ${sub_makhraj.name_en}`, content_ar, content_en, 'makharij-interactive');
+            });
+        } else {
+            const content_ar = `
+                <p class="mb-2">${makhraj.description_ar}</p>
+                <p class="font-bold">الحروف: <span class="flex flex-wrap gap-1">${makhraj.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+            `;
+            const content_en = `
+                <p class="mb-2">${makhraj.description_en}</p>
+                <p class="font-bold">Letters: <span class="flex flex-wrap gap-1">${makhraj.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+            `;
+            createAccordion(makhraj.name_ar, makhraj.name_en, content_ar, content_en, 'makharij-interactive');
+        }
+    });
+}
+
+function populateSifaat() {
+    const oppositesContainer = document.getElementById('sifaat-opposites');
+    oppositesContainer.innerHTML = '';
+    data.sifaat.opposites.forEach(sifah => {
+        const content_ar = `
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-bold">${sifah.name_ar}</p>
+                    <p class="mb-2 leading-relaxed">${sifah.desc_ar}</p>
+                    <p class="flex flex-wrap gap-1">${sifah.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+                </div>
+                <div>
+                    <p class="font-bold">${sifah.vs_ar}</p>
+                    <p class="mb-2 leading-relaxed">عكس ${sifah.name_ar}.</p>
+                    <p>${sifah.letters_vs}</p>
+                </div>
+            </div>`;
+        const content_en = `
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <p class="font-bold">${sifah.name_en}</p>
+                    <p class="mb-2 leading-relaxed">${sifah.desc_en}</p>
+                    <p class="flex flex-wrap gap-1">${sifah.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+                </div>
+                <div>
+                    <p class="font-bold">${sifah.vs_en}</p>
+                    <p class="mb-2 leading-relaxed">Opposite of ${sifah.name_en}.</p>
+                    <p>${sifah.letters_vs}</p>
+                </div>
+            </div>`;
+        createAccordion(`${sifah.name_ar} ضد ${sifah.vs_ar}`, `${sifah.name_en} vs ${sifah.vs_en}`, content_ar, content_en, 'sifaat-opposites');
+    });
+    
+    const noOppositesContainer = document.getElementById('sifaat-no-opposites');
+    noOppositesContainer.innerHTML = '';
+    data.sifaat.no_opposites.forEach(sifah => {
+        const content_ar = `
+            <p class="mb-2">${sifah.description_ar}</p>
+            <p class="font-bold">الحروف: <span class="flex flex-wrap gap-1">${sifah.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+        `;
+        const content_en = `
+            <p class="mb-2">${sifah.description_en}</p>
+            <p class="font-bold">Letters: <span class="flex flex-wrap gap-1">${sifah.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+        `;
+        createAccordion(sifah.name_ar, sifah.name_en, content_ar, content_en, 'sifaat-no-opposites');
+    });
+}
+
+function populateNoonRules() {
+    const container = document.getElementById('noon-rules');
+    container.innerHTML = '';
+    data.noon_rules.forEach(rule => {
+        const content_ar = `
+            <p class="mb-2">${rule.description_ar}</p>
+            <p class="mb-2 font-bold">الحروف: <span class="flex flex-wrap gap-1">${rule.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+            <p class="font-semibold">مثال: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        const content_en = `
+            <p class="mb-2">${rule.description_en}</p>
+            <p class="mb-2 font-bold">Letters: <span class="flex flex-wrap gap-1">${rule.letters.split(',').map(l => `<span class="rtl-letter">${l.trim()}</span>`).join('')}</span></p>
+            <p class="font-semibold">Example: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        createAccordion(rule.name_ar, rule.name_en, content_ar, content_en, 'noon-rules', rule.id);
+    });
+}
+
+function populateMeemRules() {
+    const container = document.getElementById('meem-rules');
+    container.innerHTML = '';
+    data.meem_rules.forEach(rule => {
+        const content_ar = `
+            <p class="mb-2">${rule.description_ar}</p>
+            <p class="mb-2 font-bold">الحرف: <span class="rtl-letter">${rule.letters}</span></p>
+            <p class="font-semibold">مثال: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        const content_en = `
+            <p class="mb-2">${rule.description_en}</p>
+            <p class="mb-2 font-bold">Letter: <span class="rtl-letter">${rule.letters}</span></p>
+            <p class="font-semibold">Example: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        createAccordion(rule.name_ar, rule.name_en, content_ar, content_en, 'meem-rules', rule.id); // Also added rule.id here for consistency, though not used yet for AI.
+    });
+}
+
+function populateMaddRules() {
+    const container = document.getElementById('madd-rules');
+    container.innerHTML = '';
+    data.madd_rules.forEach(rule => {
+        const content_ar = `
+            <p class="mb-2">${rule.description_ar}</p>
+            <p class="font-semibold">مثال: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        const content_en = `
+            <p class="mb-2">${rule.description_en}</p>
+            <p class="font-semibold">Example: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        createAccordion(rule.name_ar, rule.name_en, content_ar, content_en, 'madd-rules', rule.id); // Also added rule.id here for consistency, though not used yet for AI.
+    });
+}
+
+function populateOtherRules() {
+    const container = document.getElementById('other-rules');
+    container.innerHTML = '';
+    data.other_rules.forEach(rule => {
+        const content_ar = `
+            <p class="mb-2">${rule.description_ar}</p>
+            <p class="font-semibold">مثال: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        const content_en = `
+            <p class="mb-2">${rule.description_en}</p>
+            <p class="font-semibold">Example: <span class="text-blue-600 font-mono">${rule.example}</span></p>`;
+        createAccordion(rule.name_ar, rule.name_en, content_ar, content_en, 'other-rules', rule.id); // Also added rule.id here for consistency, though not used yet for AI.
+    });
+}
+
+async function generateExamplesForRule(ruleId) {
+    const rule = data.noon_rules.find(r => r.id === ruleId);
+    if (!rule) {
+        console.error("Rule not found:", ruleId);
+        return;
+    }
+
+    const buttonText = document.getElementById(`genExampleBtnText_${ruleId}`);
+    const spinner = document.getElementById(`genExampleSpinner_${ruleId}`);
+    const resultDiv = document.getElementById(`additionalExamples_${ruleId}`);
+
+    buttonText.textContent = "جاري التوليد...";
+    spinner.classList.remove('hidden');
+    resultDiv.classList.add('hidden');
+    resultDiv.innerHTML = ''; // Clear previous results
+
+    try {
+        const prompt = `Generate 5 unique and short Quranic examples (Arabic text only, no translation, no full verse, just the relevant word/phrase) for the Tajweed rule: ${rule.name_ar} (${rule.name_en}). Ensure the examples clearly demonstrate the rule. Separate examples with a comma.`;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const text = result.candidates[0].content.parts[0].text;
+            resultDiv.innerHTML = `<strong>أمثلة إضافية (${rule.name_ar}):</strong><br>${text.split(',').map(ex => `<span class="font-mono text-lg">${ex.trim()}</span>`).join('<br>')}`;
+            resultDiv.classList.remove('hidden');
+        } else {
+            resultDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من توليد أمثلة. الرجاء المحاولة مرة أخرى.</p>";
+            resultDiv.classList.remove('hidden');
+        }
+    } catch (error) {
+        console.error('Error generating examples:', error);
+        resultDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p>";
+        resultDiv.classList.remove('hidden');
+    } finally {
+        buttonText.textContent = "أمثلة إضافية ";
+        spinner.classList.add('hidden');
+    }
+}
+
+async function analyzeVerse() {
+    const verseInput = document.getElementById('verseInput');
+    const verse = verseInput.value.trim();
+    const resultDiv = document.getElementById('verseAnalysisResult');
+    const buttonText = document.getElementById('analyzeVerseButtonText');
+    const spinner = document.getElementById('analyzeVerseSpinner');
+
+    if (!verse) {
+        resultDiv.innerHTML = "<p class='text-red-600'>الرجاء إدخال آية لتحليلها.</p><p class='text-red-600'>Please enter a verse to analyze.</p>";
+        return;
+    }
+
+    buttonText.textContent = "جاري التحليل...";
+    spinner.classList.remove('hidden');
+    resultDiv.innerHTML = `<p class='text-gray-500'>جاري تحليل الآية، الرجاء الانتظار...</p><p class='text-gray-500'>Analyzing verse, please wait...</p>`;
+    
+    try {
+        const prompt = `Analyze the following Arabic Quranic verse for Tajweed rules. List and briefly explain each rule found, providing the specific word/phrase from the verse where it applies. Respond in a structured format suitable for display in an HTML div, using Arabic and English. Verse: "${verse}"`;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const analysisText = result.candidates[0].content.parts[0].text;
+            resultDiv.innerHTML = analysisText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Basic markdown bold
+        } else {
+            resultDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من تحليل الآية. الرجاء المحاولة مرة أخرى.</p><p class='text-red-600'>Sorry, I couldn't analyze the verse. Please try again.</p>";
+        }
+    } catch (error) {
+        console.error('Error analyzing verse:', error);
+        resultDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p><p class='text-red-600'>An error occurred while connecting to the AI. Please check your internet connection and try again later.</p>";
+    } finally {
+        buttonText.textContent = "تحليل الآية ";
+        spinner.classList.add('hidden');
+    }
+}
+
+async function askRuleQuestion() {
+    const queryInput = document.getElementById('ruleQueryInput');
+    const question = queryInput.value.trim();
+    const resultDiv = document.getElementById('ruleQueryResponse');
+    const buttonText = document.getElementById('askRuleQuestionButtonText');
+    const spinner = document.getElementById('askRuleQuestionSpinner');
+
+    if (!question) {
+        resultDiv.innerHTML = "<p class='text-red-600'>الرجاء إدخال سؤال حول القاعدة التجويدية.</p><p class='text-red-600'>Please enter a question about the Tajweed rule.</p>";
+        return;
+    }
+
+    buttonText.textContent = "جاري البحث...";
+    spinner.classList.remove('hidden');
+    resultDiv.innerHTML = `<p class='text-gray-500'>جاري البحث عن الإجابة، الرجاء الانتظار...</p><p class='text-gray-500'>Searching for the answer, please wait...</p>`;
+    
+    try {
+        const prompt = `I am learning Tajweed. Could you explain the rule of '${question}'? Please provide a clear and concise explanation in both Arabic and English. Include a short Quranic example in Arabic (with a short English translation of the example or the part showing the rule).`;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "AIzaSyCbUGQiq4prKaJhEK2IzIWtgqcXG-Mn2ms";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const explanationText = result.candidates[0].content.parts[0].text;
+            resultDiv.innerHTML = explanationText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Basic markdown bold
+        } else {
+            resultDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من الإجابة على سؤالك. الرجاء المحاولة مرة أخرى أو صياغة السؤال بشكل مختلف.</p><p class='text-red-600'>Sorry, I couldn't answer your question. Please try again or rephrase your question.</p>";
+        }
+    } catch (error) {
+        console.error('Error asking rule question:', error);
+        resultDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p><p class='text-red-600'>An error occurred while connecting to the AI. Please check your internet connection and try again later.</p>";
+    } finally {
+        buttonText.textContent = "اسأل الذكاء الاصطناعي ";
+        spinner.classList.add('hidden');
+    }
+}
+
+async function explainTajweedTerm() {
+    const termInput = document.getElementById('termInput');
+    const term = termInput.value.trim();
+    const resultDiv = document.getElementById('termExplanationResult');
+    const buttonText = document.getElementById('explainTermButtonText');
+    const spinner = document.getElementById('explainTermSpinner');
+
+    if (!term) {
+        resultDiv.innerHTML = "<p class='text-red-600'>الرجاء إدخال مصطلح للبحث عنه.</p><p class='text-red-600'>Please enter a term to search for.</p>";
+        return;
+    }
+
+    buttonText.textContent = "جاري البحث...";
+    spinner.classList.remove('hidden');
+    resultDiv.innerHTML = `<p class='text-gray-500'>جاري البحث عن شرح المصطلح، الرجاء الانتظار...</p><p class='text-500'>Searching for the term explanation, please wait...</p>`;
+    
+    try {
+        const prompt = `Explain the Tajweed term '${term}' clearly and concisely in both Arabic and English. Provide a short Quranic example for illustration if applicable.`;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const explanationText = result.candidates[0].content.parts[0].text;
+            resultDiv.innerHTML = explanationText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Basic markdown bold
+        } else {
+            resultDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من شرح هذا المصطلح. الرجاء المحاولة مرة أخرى أو التأكد من إدخال مصطلح تجويدي صحيح.</p><p class='text-red-600'>Sorry, I couldn't explain this term. Please try again or ensure you entered a valid Tajweed term.</p>";
+        }
+    } catch (error) {
+        console.error('Error explaining term:', error);
+        resultDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p><p class='text-red-600'>An error occurred while connecting to the AI. Please check your internet connection and try again later.</p>";
+    } finally {
+        buttonText.textContent = "اشرح المصطلح ";
+        spinner.classList.add('hidden');
+    }
+}
+
+async function generateQuiz() {
+    const topicSelect = document.getElementById('quizTopicSelect');
+    const selectedTopicId = topicSelect.value;
+    const selectedTopicText = topicSelect.options[topicSelect.selectedIndex].text;
+    const quizQuestionsDiv = document.getElementById('quizQuestions');
+    const quizAnswersDiv = document.getElementById('quizAnswers');
+    const showAnswersContainer = document.getElementById('showAnswersContainer');
+    const generateQuizButtonText = document.getElementById('generateQuizButtonText');
+    const generateQuizSpinner = document.getElementById('generateQuizSpinner');
+
+    generateQuizButtonText.textContent = "جاري التوليد...";
+    generateQuizSpinner.classList.remove('hidden');
+    quizQuestionsDiv.innerHTML = `<p class='text-gray-500'>جاري توليد الأسئلة، الرجاء الانتظار...</p><p class='text-gray-500'>Generating questions, please wait...</p>`;
+    quizAnswersDiv.classList.add('hidden');
+    showAnswersContainer.classList.add('hidden');
+    currentQuizQuestions = []; // Reset questions
+
+    try {
+        const prompt = `Generate 3 multiple-choice questions about Tajweed rules related to the topic of '${selectedTopicText}'. For each question, provide 4 options (A, B, C, D). After all questions, provide the correct answers.
+        
+        Format the output as follows:
+        السؤال 1: [Question 1 Arabic Text]
+        أ) [Option A]
+        ب) [Option B]
+        ج) [Option C]
+        د) [Option D]
+
+        السؤال 2: [Question 2 Arabic Text]
+        أ) [Option A]
+        ب) [Option B]
+        ج) [Option C]
+        د) [Option D]
+
+        السؤال 3: [Question 3 Arabic Text]
+        أ) [Option A]
+        ب) [Option B]
+        ج) [Option C]
+        د) [Option D]
+
+        الإجابات الصحيحة:
+        1. [Correct option letter for Q1]
+        2. [Correct option letter for Q2]
+        3. [Correct option letter for Q3]
+        `;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const quizText = result.candidates[0].content.parts[0].text;
+            parseAndDisplayQuiz(quizText);
+            showAnswersContainer.classList.remove('hidden');
+        } else {
+            quizQuestionsDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من توليد الاختبار. الرجاء المحاولة مرة أخرى.</p>";
+        }
+    } catch (error) {
+        console.error('Error generating quiz:', error);
+        quizQuestionsDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p>";
+    } finally {
+        generateQuizButtonText.textContent = "توليد الاختبار ";
+        generateQuizSpinner.classList.add('hidden');
+    }
+}
+
+function parseAndDisplayQuiz(quizText) {
+    const quizQuestionsDiv = document.getElementById('quizQuestions');
+    const quizAnswersDiv = document.getElementById('quizAnswers');
+    quizQuestionsDiv.innerHTML = '';
+    quizAnswersDiv.innerHTML = '<h3 class="text-xl font-bold mb-2" style="color:#6D6250;">الإجابات الصحيحة (Correct Answers):</h3>';
+    
+    const parts = quizText.split('الإجابات الصحيحة:');
+    const questionsPart = parts[0];
+    const answersPart = parts[1];
+
+    const questions = questionsPart.split('السؤال ').filter(q => q.trim() !== '').map((qBlock, index) => {
+        const lines = qBlock.trim().split('\n');
+        const questionText = lines[0].replace(/:\s*/, '').trim();
+        const options = lines.slice(1, 5).map(opt => opt.trim());
+        return {
+            id: index + 1,
+            question: `السؤال ${index + 1}: ${questionText}`,
+            options: options
+        };
+    });
+    currentQuizQuestions = questions;
+
+    questions.forEach(q => {
+        const questionElement = document.createElement('div');
+        questionElement.className = 'mb-4 tajweed-card';
+        questionElement.innerHTML = `<p class="font-bold text-lg mb-2" style="color:#A0937D;">${q.question}</p>`;
+        
+        q.options.forEach(option => {
+            const optionElement = document.createElement('div');
+            optionElement.className = 'quiz-option';
+            optionElement.textContent = option;
+            questionElement.appendChild(optionElement);
+        });
+        quizQuestionsDiv.appendChild(questionElement);
+    });
+
+    if (answersPart) {
+        const answers = answersPart.trim().split('\n').map(a => a.trim()).filter(a => a !== '');
+        answers.forEach(answerLine => {
+            const p = document.createElement('p');
+            p.textContent = answerLine;
+            quizAnswersDiv.appendChild(p);
+        });
+    }
+}
+
+function revealAnswers() {
+    const quizAnswersDiv = document.getElementById('quizAnswers');
+    const revealAnswersButtonText = document.getElementById('revealAnswersButtonText');
+    const revealAnswersSpinner = document.getElementById('revealAnswersSpinner');
+
+    revealAnswersButtonText.textContent = "جاري الكشف...";
+    revealAnswersSpinner.classList.remove('hidden');
+
+    // Simulate a brief delay for UX
+    setTimeout(() => {
+        quizAnswersDiv.classList.remove('hidden');
+        revealAnswersButtonText.textContent = "عرض الإجابات";
+        revealAnswersSpinner.classList.add('hidden');
+    }, 500); // 0.5 second delay
+}
+
+async function getCommonMistakes() {
+    const topicSelect = document.getElementById('mistakesTopicSelect');
+    const selectedTopicText = topicSelect.options[topicSelect.selectedIndex].value; // Using value as it's already translated
+    const resultDiv = document.getElementById('commonMistakesResult');
+    const buttonText = document.getElementById('getMistakesButtonText');
+    const spinner = document.getElementById('getMistakesSpinner');
+
+    buttonText.textContent = "جاري التوليد...";
+    spinner.classList.remove('hidden');
+    resultDiv.innerHTML = `<p class='text-gray-500'>جاري توليد الأخطاء الشائعة والنصائح، الرجاء الانتظار...</p><p class='text-gray-500'>Generating common mistakes and tips, please wait...</p>`;
+    
+    try {
+        const prompt = `Generate a list of 3 common mistakes (in Arabic and English) made when applying the Tajweed rules of '${selectedTopicText}', and provide a brief tip on how to correct each mistake. Each mistake and tip should be a separate point.
+        
+        Format the output clearly with Arabic and English for both mistake and tip. Example:
+        1. الخطأ: [Arabic Mistake]. Mistake: [English Mistake].
+           النصيحة: [Arabic Tip]. Tip: [English Tip].
+        `;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const mistakesText = result.candidates[0].content.parts[0].text;
+            resultDiv.innerHTML = mistakesText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>'); // Basic markdown bold
+        } else {
+            resultDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من توليد الأخطاء والنصائح. الرجاء المحاولة مرة أخرى.</p>";
+        }
+    } catch (error) {
+        console.error('Error generating common mistakes:', error);
+        resultDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p>";
+    } finally {
+        buttonText.textContent = "عرض الأخطاء والنصائح ";
+        spinner.classList.add('hidden');
+    }
+}
+
+async function generatePracticeSentences() {
+    const topicSelect = document.getElementById('practiceTopicSelect');
+    const selectedTopicText = topicSelect.options[topicSelect.selectedIndex].value; // Using value as it's already translated
+    const resultDiv = document.getElementById('practiceSentencesResult');
+    const buttonText = document.getElementById('generatePracticeSentencesButtonText');
+    const spinner = document.getElementById('generatePracticeSentencesSpinner');
+
+    buttonText.textContent = "جاري التوليد...";
+    spinner.classList.remove('hidden');
+    resultDiv.innerHTML = `<p class='text-gray-500'>جاري توليد الجمل التدريبية، الرجاء الانتظار...</p><p class='text-gray-500'>Generating practice sentences, please wait...</p>`;
+    
+    try {
+        const prompt = `Generate 5 short Arabic Quranic phrases or single words that clearly demonstrate the Tajweed rule of '${selectedTopicText}'. Provide only the Arabic text, one example per line, without any numbering, additional explanations, or translations.`;
+        
+        let chatHistory = [];
+        chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+        const payload = { contents: chatHistory };
+        const apiKey = "";
+        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+        const result = await response.json();
+
+        if (result.candidates && result.candidates.length > 0 &&
+            result.candidates[0].content && result.candidates[0].content.parts &&
+            result.candidates[0].content.parts.length > 0) {
+            const sentencesText = result.candidates[0].content.parts[0].text;
+            resultDiv.innerHTML = `<strong>جمل تدريبية لقاعدة ${selectedTopicText}:</strong><br>` + 
+                                  sentencesText.split('\n').map(s => s.trim()).filter(s => s !== '').map(s => `<span class="font-mono text-lg">${s}</span>`).join('<br>');
+        } else {
+            resultDiv.innerHTML = "<p class='text-red-600'>عذرًا، لم أتمكن من توليد الجمل التدريبية. الرجاء المحاولة مرة أخرى.</p>";
+        }
+    } catch (error) {
+        console.error('Error generating practice sentences:', error);
+        resultDiv.innerHTML = "<p class='text-red-600'>حدث خطأ أثناء الاتصال بالذكاء الاصطناعي. الرجاء التحقق من اتصالك بالإنترنت والمحاولة لاحقًا.</p>";
+    } finally {
+        buttonText.textContent = "توليد الجمل ";
+        spinner.classList.add('hidden');
+    }
+}
+
+function createNoonChart() {
+    const ctx = document.getElementById('noonChart').getContext('2d');
+    window.noonChartInstance = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['الإظهار (Izhaar)', 'الإدغام (Idghaam)', 'الإقلاب (Iqlaab)', 'الإخفاء (Ikhfaa)'],
+            datasets: [{
+                label: 'عدد الحروف / Number of Letters',
+                data: [6, 6, 1, 15],
+                backgroundColor: [
+                    'rgba(160, 147, 125, 0.7)',
+                    'rgba(210, 180, 140, 0.7)',
+                    'rgba(188, 143, 143, 0.7)',
+                    'rgba(244, 164, 96, 0.7)',
+                ],
+                borderColor: [
+                    '#A0937D',
+                    '#D2B48C',
+                    '#BC8F8F',
+                    '#F4A460',
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                    labels: {
+                        font: { family: "'Noto Sans Arabic', sans-serif", size: 14 }
+                    }
+                },
+                title: {
+                    display: true,
+                    text: 'توزيع حروف الهجاء على أحكام النون الساكنة / Distribution of Letters for Noon Saakinah Rules',
+                    font: { family: "'Noto Sans Arabic', sans-serif", size: 16 }
+                }
+            }
+        }
+    });
+}
+
+function createSifaatChart() {
+    const ctx = document.getElementById('sifaatChart').getContext('2d');
+    window.sifaatChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['الهمس vs الجهر (Hems vs Jahr)', 'الشدة vs الرخاوة (Shiddah vs Rakhaawa)'],
+            datasets: [
+                {
+                    label: 'الصفة الأولى / First Characteristic',
+                    data: [10, 8], // Hems, Shiddah
+                    backgroundColor: 'rgba(160, 147, 125, 0.7)',
+                    borderColor: '#A0937D',
+                    borderWidth: 1
+                },
+                {
+                    label: 'الصفة المقابلة / Opposing Characteristic',
+                    data: [19, 16], // Jahr (29-10), Rakhawa (29-8-5)
+                    backgroundColor: 'rgba(210, 180, 140, 0.7)',
+                    borderColor: '#D2B48C',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                     labels: { font: { family: "'Noto Sans Arabic', sans-serif" } }
+                },
+                title: {
+                    display: true,
+                    text: 'مقارنة عدد حروف الصفات المتضادة / Comparison of Letter Counts for Opposing Characteristics',
+                    font: { family: "'Noto Sans Arabic', sans-serif", size: 16 }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { family: "'Inter', sans-serif" }
+                    }
+                },
+                x: {
+                    ticks: {
+                        font: { family: "'Noto Sans Arabic', sans-serif", size: 14 }
+                    }
+                }
+            }
+        }
+    });
+}
+
+function createMaddChart() {
+    const ctx = document.getElementById('maddChart').getContext('2d');
+    window.maddChartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['المد الطبيعي (Natural)', 'مد البدل (Substituted)', 'المد الجائز (Permissible)', 'المد الواجب (Obligatory)', 'المد اللازم (Necessary)'],
+            datasets: [{
+                label: 'عدد الحركات (الحد الأعلى) / Number of Counts (Max)',
+                data: [2, 2, 5, 5, 6],
+                backgroundColor: [
+                    'rgba(244, 164, 96, 0.7)',
+                    'rgba(244, 164, 96, 0.7)',
+                    'rgba(210, 180, 140, 0.7)',
+                    'rgba(188, 143, 143, 0.7)',
+                    'rgba(160, 147, 125, 0.7)',
+                ],
+                borderColor: [
+                    '#F4A460',
+                    '#F4A460',
+                    '#D2B48C',
+                    '#BC8F8F',
+                    '#A0937D',
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            indexAxis: 'y',
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                title: {
+                    display: true,
+                    text: 'مقارنة مقادير المدود المختلفة (بالحركات) / Comparison of Madd Durations (in Counts)',
+                    font: { family: "'Noto Sans Arabic', sans-serif", size: 16 }
+                },
+            },
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    ticks: {
+                        font: { family: "'Inter', sans-serif" }
+                    }
+                },
+                y: {
+                    ticks: {
+                        font: { family: "'Noto Sans Arabic', sans-serif", size: 14 }
+                    }
+                }
+            }
+        }
+    });
+}
+</script>
+
+</body>
+</html>
